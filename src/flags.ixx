@@ -47,6 +47,7 @@ namespace dispatch
 	export class flags
 	{
 	public:
+		flags() = default;
 		flags(std::span< const char*const > args);
 		flags(std::span< const char*const > args, const expectation& expected);
 

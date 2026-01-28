@@ -4,6 +4,6 @@ namespace mains
 {
 	export int multiprocess(int, const char*const*)
 	{
-		return 1;
+		return 4;
 	}
 }
