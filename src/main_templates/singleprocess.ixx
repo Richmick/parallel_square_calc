@@ -2,8 +2,8 @@ export module main_templates.singleprocess;
 
 namespace mains
 {
-	export int singleprocess(int, int**)
+	export int singleprocess(int, const char*const*)
 	{
-		return 0;
+		return 1;
 	}
 }
