@@ -8,7 +8,7 @@ namespace geometry
 	};
 	export struct rect_t
 	{
-		point_t p1, p2;
+		point_t p1, p2; ///< Must be bottom left (p1) & top right (p2)
 	};
 	export struct circle_t
 	{
@@ -17,8 +17,8 @@ namespace geometry
 	};
 	export struct ellipse_t
 	{
-		float v_semiaxis;
 		float h_semiaxis;
+		float v_semiaxis;
 		point_t center;
 	};
 	export template< class T >
