@@ -7,10 +7,11 @@ import <atomic>;
 import <exception>;
 import <future>;
 import <functional>;
+import <iterator>;
 
 namespace concurrent::multithread
 {
-	struct task
+	export struct task
 	{
 		enum class state: char
 		{
@@ -48,6 +49,7 @@ namespace concurrent::multithread
 
 		void resize(std::size_t nthreads);
 		idx_t queued() const; ///< not excluding cancelled
+		idx_t remaining() const;
 		std::size_t running() const;
 		bool paused() const;
 		void pause();
@@ -55,7 +57,7 @@ namespace concurrent::multithread
 		bool stop();
 
 	private:
-		template< class Typemap, bool LightVersion > friend class worker;
+		template< class Typemap1, bool LightVersion1 > friend class worker;
 
 		idx_t nregistered_tasks_ = 0;
 		idx_t queue_head_idx_ = 0;
@@ -69,6 +71,7 @@ namespace concurrent::multithread
 		std::atomic_flag pause_flag_;
 
 		void create_thread();
+		void inc_head();
 		bool has_free_tasks() const noexcept;
 	};
 }
@@ -99,6 +102,10 @@ bool concurrent::multithread::pool< Typemap, LightVersion >::cancel_task(idx_t i
 {
 	if (task_state(id) == task::state::created)
 	{
+		if (queue_head_idx_ == id)
+		{
+			inc_head();
+		}
 		task_map_.erase(task_map_.find(id));
 		return true;
 	}
@@ -113,9 +120,16 @@ concurrent::multithread::task::state concurrent::multithread::pool< Typemap, Lig
 	return it->second.status;
 }
 template< class Typemap, bool LightVersion >
-concurrent::multithread::pool< Typemap, LightVersion >::idx_t concurrent::multithread::pool< Typemap, LightVersion >::queued() const
+concurrent::multithread::pool< Typemap, LightVersion >::idx_t
+		concurrent::multithread::pool< Typemap, LightVersion >::queued() const
 {
 	return nregistered_tasks_ - queue_head_idx_;
+}
+template< class Typemap, bool LightVersion >
+concurrent::multithread::pool< Typemap, LightVersion >::idx_t
+		concurrent::multithread::pool< Typemap, LightVersion >::remaining() const
+{
+	return task_map_.size();
 }
 template< class Typemap, bool LightVersion >
 std::size_t concurrent::multithread::pool< Typemap, LightVersion >::running() const
@@ -191,4 +205,14 @@ template< class Typemap, bool LightVersion >
 bool concurrent::multithread::pool< Typemap, LightVersion >::has_free_tasks() const noexcept
 {
 	return queue_head_idx_ < nregistered_tasks_;
+}
+template< class Typemap, bool LightVersion >
+void concurrent::multithread::pool< Typemap, LightVersion >::inc_head()
+{
+	if (!has_free_tasks())
+	{
+		return;
+	}
+	auto next_iter = std::next(task_map_.find(queue_head_idx_));
+	queue_head_idx_ = (next_iter == task_map_.end() ? nregistered_tasks_ : next_iter->first);
 }

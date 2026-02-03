@@ -26,6 +26,11 @@ namespace concurrent::multithread
 			while (true)
 			{
 				std::unique_lock lock(static_cast< Typemap::mutex& >(pool_));
+				if (queued_ != pool_.task_map_.end())
+				{
+					pool_.task_map_.erase(queued_);
+					queued_ = pool_.task_map_.end();
+				}
 				if (!need_stop() && pause())
 				{
 					pool_.new_tasks_cond_.wait(lock, [this]{ return need_stop() || !pause(); });
@@ -35,7 +40,8 @@ namespace concurrent::multithread
 					pool_.new_tasks_cond_.wait(lock,
 								[this]{ return need_stop() || (!pause() && try_update_tasks()); });
 				}
-				if (stop_flag_) {
+				if (stop_flag_)
+				{
 					if (!not_erase_self_)
 					{
 						self_it_->second.detach();
@@ -74,8 +80,7 @@ namespace concurrent::multithread
 			}
 			queued_ = pool_.task_map_.find(pool_.queue_head_idx_);
 			queued_->second.status = task::state::planned;
-			auto next_iter = std::next(queued_);
-			pool_.queue_head_idx_ = (next_iter == pool_.task_map_.end() ? pool_.nregistered_tasks_ : next_iter->first);
+			pool_.inc_head();
 			return true;
 		}
 	};

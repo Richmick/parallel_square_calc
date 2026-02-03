@@ -8,7 +8,7 @@ import :basic_operations;
 
 namespace geometry
 {
-	using shape_t = std::variant< rect_t, circle_t, ellipse_t >;
+	export using shape_t = std::variant< rect_t, circle_t, ellipse_t >;
 	export struct composition_t
 	{
 		std::vector< rotated_t< shape_t > > shapes; ///< Must be not empty
