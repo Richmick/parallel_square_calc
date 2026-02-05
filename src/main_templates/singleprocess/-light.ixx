@@ -12,21 +12,35 @@ import concurrent.thread_pool;
 
 import :common;
 
-namespace mains
+namespace mains::singleprocess
 {
 	export template< class Typemap >
-	int singleprocess_light(int argc, const char* const* argv)
+	int light(int argc, const char* const* argv)
 	{
 		if (argc < 2)
 		{
 			std::println(std::cerr, "not enough plain arguments");
 			return 1;
 		}
-		std::uint64_t shots = std::stoull(argv[1]);
+		std::uint64_t shots = 1;
 		std::uint64_t seed = 0;
-		if (argc == 3)
+		try
 		{
-			seed = std::stoull(argv[2]);
+			shots = std::stoull(argv[1]);
+			if (argc == 3)
+			{
+				seed = std::stoull(argv[2]);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			std::println(std::cerr, "failed to parse arguments: {}", e.what());
+			return 1;
+		}
+		if (shots == 0)
+		{
+			std::println(std::cerr, "zero shots");
+			return 1;
 		}
 		if (argc > 3)
 		{
@@ -70,9 +84,9 @@ namespace mains
 		}
 		pool.unlock();
 
-		shots_per_thread += shots % nthreads;
+		shots_per_thread += shots % (results.size() + 1);
 		hits = monothread(engine(), shots_per_thread, frame, composed);
-		for (std::future< std::uint64_t >& future : results)
+		for (std::future< std::uint64_t >& future: results)
 		{
 			hits += future.get();
 		}

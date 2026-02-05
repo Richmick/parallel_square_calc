@@ -49,11 +49,11 @@ namespace mains
 
 		if (flags.test('s'))
 		{
-			return singleprocess_heavy< concurrent::std_types >(static_cast< int >(args.size()), args.data());
+			return mains::singleprocess::heavy< concurrent::std_types >(static_cast< int >(args.size()), args.data());
 		}
 		if (flags.test('m'))
 		{
-			return multiprocess(static_cast< int >(args.size()), args.data());
+			return mains::multiprocess(static_cast< int >(args.size()), args.data());
 		}
 		return 3;
 	}

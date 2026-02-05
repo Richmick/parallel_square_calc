@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE(tasks_queue_test)
 	BOOST_TEST((pool.task_state(tasks_results[n_nothrow_tasks].first)
 					== concurrent::multithread::task::state::closed));
 	BOOST_TEST((pool.task_state(tasks_results[0].first) == concurrent::multithread::task::state::created));
+	BOOST_TEST((pool.task_state(tasks_results[n_nothrow_tasks].first) == concurrent::multithread::task::state::created));
 	pool.unlock();
 
 	for (std::size_t i = 1; i < n_nothrow_tasks; i++)

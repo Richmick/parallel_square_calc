@@ -58,7 +58,7 @@ constexpr geometry::point_t geometry::rotate(point_t center, point_t p, float si
 {
 	p.x -= center.x;
 	p.y -= center.y;
-	return {center.x + (p.x * cos - p.y * sin), center.x + (p.x * sin + p.y * cos)};
+	return {center.x + (p.x * cos - p.y * sin), center.y + (p.x * sin + p.y * cos)};
 }
 
 constexpr float geometry::square_of(rect_t rect)
@@ -145,5 +145,5 @@ constexpr bool geometry::inside_of(point_t p, ellipse_t e)
 template< class T >
 constexpr bool geometry::inside_of(point_t p, rotated_t< T > shape)
 {
-	return inside_of(rotate(center_of(shape), p, shape.angle), shape.shape);
+	return inside_of(rotate(center_of(shape), p, -shape.angle), shape.shape);
 }

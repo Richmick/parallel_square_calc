@@ -56,6 +56,7 @@ namespace dispatch
 
 		std::span< const std::string_view > plain() const&;
 		std::string_view operator[](std::string_view key) const&;
+		bool has_key(std::string_view key) const;
 		bool test(std::string_view flag) const;
 		bool test(char c) const;
 
@@ -252,6 +253,10 @@ std::span< const std::string_view > dispatch::flags::plain() const&
 std::string_view dispatch::flags::operator[](std::string_view key) const&
 {
 	return map_.at(key);
+}
+bool dispatch::flags::has_key(std::string_view key) const
+{
+	return map_.contains(key);
 }
 bool dispatch::flags::test(std::string_view flag) const
 {

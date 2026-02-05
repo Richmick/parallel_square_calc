@@ -3,7 +3,7 @@ export module main_templates.singleprocess:common;
 import <random>;
 import geometry;
 
-namespace mains
+namespace mains::singleprocess
 {
 	std::uint64_t monothread(std::uint64_t seed, std::uint64_t shots,
 				geometry::rect_t frame, geometry::composition_t& composed)
