@@ -29,14 +29,17 @@ namespace mains::singleprocess
 		geometry::rect_t frame;
 		geometry::composition_t composed;
 		std::vector< std::pair< std::size_t, std::future< std::uint64_t > > > results;
+		bool finished = false;
 
 		void success(std::uint64_t hits)
 		{
 			std::println("! {} {} !", id, shots_to_square(frame, shots, hits));
+			finished = true;
 		}
 		void fatal()
 		{
 			std::println("! {} fatal !", id);
+			finished = true;
 		}
 	};
 	template< class Pool >
@@ -44,6 +47,7 @@ namespace mains::singleprocess
 	{
 		Pool& pool;
 		calculation_task& task;
+		logging::logger& log;
 		bool ready_check_on_exit = false;
 
 		std::uint64_t operator()(std::uint64_t seed, std::uint64_t shots_per_thread);
@@ -52,6 +56,7 @@ namespace mains::singleprocess
 	{
 		logging::logger log{std::clog};
 		std::mt19937_64 engine{0};
+		std::size_t start_nthreads{0};
 		bool slave, always_online;
 
 		void init(int argc, const char* const* argv);
@@ -59,6 +64,7 @@ namespace mains::singleprocess
 	void read(std::istream& in, std::size_t nshapes, geometry::composition_t& composed);
 	calculation_task& read_task(std::istream& in, std::map< std::size_t, calculation_task >& task_map);
 	void send_task(logging::logger& log, init_data& data, calculation_task& task, auto& pool);
+	void forget_finished(std::map< std::size_t, calculation_task >& task_map);
 }
 
 template< class Typemap >
@@ -78,12 +84,15 @@ int mains::singleprocess::heavy(int argc, const char*const* argv)
 	{
 		return mains::singleprocess::light< Typemap >(argc, argv);
 	}
+	logging::logger& log = data.log;
 
 	concurrent::multithread::pool< Typemap > pool;
+	pool.resize(data.start_nthreads);
 	pool.unlock();
+	log.debug("initialized a pool with {} threads", data.start_nthreads);
 	std::map< std::size_t, calculation_task > task_map;
-	logging::logger& log = data.log;
 	std::string open_key;
+	log.info("slave init finished");
 	while (std::cin >> open_key)
 	{
 		if (open_key != "<--open-task-->")
@@ -92,6 +101,8 @@ int mains::singleprocess::heavy(int argc, const char*const* argv)
 		}
 		try
 		{
+			log.debug("clear finished tasks");
+			forget_finished(task_map);
 			log.debug("task reading started");
 			calculation_task& tsk = read_task(std::cin, task_map);
 			log.debug("task reading ended");
@@ -100,6 +111,7 @@ int mains::singleprocess::heavy(int argc, const char*const* argv)
 		catch (const std::exception& e)
 		{
 			log.fatal("failed to create task: {}", e.what());
+			std::cin.clear(std::cin.rdstate() & ~std::ios::failbit);
 		}
 	}
 	log.info("slave finished");
@@ -135,18 +147,19 @@ std::uint64_t mains::singleprocess::monothread_with_out< Typemap>::operator()(st
 			sum += i.second.get();
 		}
 	}
+	log.info("finished task #{} processing", task.id);
 	task.success(sum);
-	ready_check_on_exit = false;
 	return hits;
 }
 void mains::singleprocess::send_task(logging::logger& log, init_data& data, calculation_task& tsk, auto& pool)
 {
-	monothread_with_out< decltype(pool) > executor{pool, tsk, data.always_online};
+	monothread_with_out< decltype(pool) > executor{pool, tsk, log, data.always_online};
 	std::uint64_t shots_per_thread = tsk.shots / tsk.nthreads;
 	std::unique_lock lock(pool);
 	if (pool.running() < tsk.nthreads)
 	{
 		pool.resize(tsk.nthreads);
+		log.debug("thread pool extended to {} threads", tsk.nthreads);
 	}
 	for (std::size_t i = 1; i < tsk.nthreads; i++)
 	{

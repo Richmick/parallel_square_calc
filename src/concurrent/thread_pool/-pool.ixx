@@ -31,7 +31,7 @@ namespace concurrent::multithread
 	using task_result_t = std::invoke_result_t< task_bind_t< F, Args... > >;
 
 	/// Thread pool (necessary to use mutex for all interface calls except stop())
-	export template< class Typemap, bool LightVersion = false >
+	export template< class Typemap >
 	class pool: public Typemap::mutex
 	{
 	public:
@@ -57,7 +57,7 @@ namespace concurrent::multithread
 		bool stop();
 
 	private:
-		template< class Typemap1, bool LightVersion1 > friend class worker;
+		template< class Typemap1 > friend class worker;
 
 		idx_t nregistered_tasks_ = 0;
 		idx_t queue_head_idx_ = 0;
@@ -76,15 +76,15 @@ namespace concurrent::multithread
 	};
 }
 
-template< class Typemap, bool LightVersion >
-concurrent::multithread::pool< Typemap, LightVersion >::pool()
+template< class Typemap >
+concurrent::multithread::pool< Typemap >::pool()
 {
 	stop_flag_.clear(std::memory_order::release);
 	pause_flag_.clear(std::memory_order::release);
 	this->lock();
 }
-template< class Typemap, bool LightVersion >
-concurrent::multithread::pool< Typemap, LightVersion >::~pool()
+template< class Typemap >
+concurrent::multithread::pool< Typemap >::~pool()
 {
 	if (!stop()) return;
 
@@ -97,8 +97,8 @@ concurrent::multithread::pool< Typemap, LightVersion >::~pool()
 	}
 	threads_.clear();
 }
-template< class Typemap, bool LightVersion >
-bool concurrent::multithread::pool< Typemap, LightVersion >::cancel_task(idx_t id)
+template< class Typemap >
+bool concurrent::multithread::pool< Typemap >::cancel_task(idx_t id)
 {
 	if (task_state(id) == task::state::created)
 	{
@@ -111,49 +111,49 @@ bool concurrent::multithread::pool< Typemap, LightVersion >::cancel_task(idx_t i
 	}
 	return false;
 }
-template< class Typemap, bool LightVersion >
-concurrent::multithread::task::state concurrent::multithread::pool< Typemap, LightVersion >::task_state(idx_t id)
+template< class Typemap >
+concurrent::multithread::task::state concurrent::multithread::pool< Typemap >::task_state(idx_t id)
 {
 	if (id >= nregistered_tasks_) return task::state::unknown;
 	auto it = task_map_.find(id);
 	if (it == task_map_.end()) return task::state::closed;
 	return it->second.status;
 }
-template< class Typemap, bool LightVersion >
-concurrent::multithread::pool< Typemap, LightVersion >::idx_t
-		concurrent::multithread::pool< Typemap, LightVersion >::queued() const
+template< class Typemap >
+concurrent::multithread::pool< Typemap >::idx_t
+		concurrent::multithread::pool< Typemap >::queued() const
 {
 	return nregistered_tasks_ - queue_head_idx_;
 }
-template< class Typemap, bool LightVersion >
-concurrent::multithread::pool< Typemap, LightVersion >::idx_t
-		concurrent::multithread::pool< Typemap, LightVersion >::remaining() const
+template< class Typemap >
+concurrent::multithread::pool< Typemap >::idx_t
+		concurrent::multithread::pool< Typemap >::remaining() const
 {
 	return task_map_.size();
 }
-template< class Typemap, bool LightVersion >
-std::size_t concurrent::multithread::pool< Typemap, LightVersion >::running() const
+template< class Typemap >
+std::size_t concurrent::multithread::pool< Typemap >::running() const
 {
 	return threads_.size();
 }
-template< class Typemap, bool LightVersion >
-bool concurrent::multithread::pool< Typemap, LightVersion >::paused() const
+template< class Typemap >
+bool concurrent::multithread::pool< Typemap >::paused() const
 {
 	return pause_flag_.test(std::memory_order::acquire);
 }
-template< class Typemap, bool LightVersion >
-void concurrent::multithread::pool< Typemap, LightVersion >::pause()
+template< class Typemap >
+void concurrent::multithread::pool< Typemap >::pause()
 {
 	pause_flag_.test_and_set(std::memory_order::release);
 }
-template< class Typemap, bool LightVersion >
-void concurrent::multithread::pool< Typemap, LightVersion >::resume()
+template< class Typemap >
+void concurrent::multithread::pool< Typemap >::resume()
 {
 	pause_flag_.clear(std::memory_order::release);
 	new_tasks_cond_.notify_all();
 }
-template< class Typemap, bool LightVersion >
-bool concurrent::multithread::pool< Typemap, LightVersion >::stop()
+template< class Typemap >
+bool concurrent::multithread::pool< Typemap >::stop()
 {
 	if (stop_flag_.test_and_set(std::memory_order::acquire))
 	{
@@ -163,11 +163,11 @@ bool concurrent::multithread::pool< Typemap, LightVersion >::stop()
 	pause_flag_.clear(std::memory_order::release);
 	return true;
 }
-template< class Typemap, bool LightVersion >
+template< class Typemap >
 template< class F, class... Args >
-std::pair< typename concurrent::multithread::pool< Typemap, LightVersion >::idx_t,
+std::pair< typename concurrent::multithread::pool< Typemap >::idx_t,
 			std::future< concurrent::multithread::task_result_t< F, Args... > > >
-		concurrent::multithread::pool< Typemap, LightVersion >::create_task(F&& f, Args&&... args)
+		concurrent::multithread::pool< Typemap >::create_task(F&& f, Args&&... args)
 {
 	using result_t = task_result_t< F, Args... >;
 	struct executor
@@ -182,14 +182,14 @@ std::pair< typename concurrent::multithread::pool< Typemap, LightVersion >::idx_
 	new_tasks_cond_.notify_all();
 	return result;
 }
-template< class Typemap, bool LightVersion >
-void concurrent::multithread::pool< Typemap, LightVersion >::create_thread()
+template< class Typemap >
+void concurrent::multithread::pool< Typemap >::create_thread()
 {
 	auto it = threads_.try_emplace(nregistered_threads_++);
 	it.first->second = std::thread{worker{*this, it.first}};
 }
-template< class Typemap, bool LightVersion >
-void concurrent::multithread::pool< Typemap, LightVersion >::resize(std::size_t nthreads)
+template< class Typemap >
+void concurrent::multithread::pool< Typemap >::resize(std::size_t nthreads)
 {
 	if (nthreads == running()) return;
 	if (nthreads > running())
@@ -201,13 +201,13 @@ void concurrent::multithread::pool< Typemap, LightVersion >::resize(std::size_t 
 	}
 	wished_nthreads_ = nthreads;
 }
-template< class Typemap, bool LightVersion >
-bool concurrent::multithread::pool< Typemap, LightVersion >::has_free_tasks() const noexcept
+template< class Typemap >
+bool concurrent::multithread::pool< Typemap >::has_free_tasks() const noexcept
 {
 	return queue_head_idx_ < nregistered_tasks_;
 }
-template< class Typemap, bool LightVersion >
-void concurrent::multithread::pool< Typemap, LightVersion >::inc_head()
+template< class Typemap >
+void concurrent::multithread::pool< Typemap >::inc_head()
 {
 	if (!has_free_tasks())
 	{

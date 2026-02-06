@@ -13,6 +13,7 @@ void mains::singleprocess::init_data::init(int argc, const char* const* argv)
 	expect.add_long_flag("silent");
 	expect.add_key_value("seed");
 	expect.add_key_value("id");
+	expect.add_key_value("start-threads");
 	dispatch::flags flags({argv, static_cast< std::size_t >(argc)}, expect);
 	slave = flags.test('S');
 	if (!slave)
@@ -31,6 +32,10 @@ void mains::singleprocess::init_data::init(int argc, const char* const* argv)
 	{
 		engine.seed(std::stoull(flags["seed"].data()));
 	}
+	if (flags.has_key("start-threads"))
+	{
+		start_nthreads = std::stoull(flags["start-threads"].data());
+	}
 
 	bool silent = flags.test("silent");
 	bool fatal = flags.test("fatal");
@@ -46,7 +51,7 @@ void mains::singleprocess::init_data::init(int argc, const char* const* argv)
 	log.debug("logger init finished");
 
 	always_online = flags.test('a');
-	log.info("slave init finished");
+	log.debug("startup argumments parsing finished");
 }
 void mains::singleprocess::read(std::istream& in, std::size_t nshapes, geometry::composition_t& composed)
 {
@@ -118,6 +123,7 @@ mains::singleprocess::calculation_task& mains::singleprocess::read_task(std::ist
 		throw std::invalid_argument(std::format("task #{} already exists", id));
 	}
 	calculation_task& tsk = insert_response.first->second;
+	tsk.id = id;
 
 	std::size_t nshapes = 0;
 	if (!(std::cin >> tsk.nthreads >> tsk.shots >> nshapes))
@@ -153,4 +159,12 @@ mains::singleprocess::calculation_task& mains::singleprocess::read_task(std::ist
 	}
 	tsk.frame = geometry::frame_of(tsk.composed);
 	return tsk;
+}
+void mains::singleprocess::forget_finished(std::map< std::size_t, calculation_task >& task_map)
+{
+	auto i = task_map.begin();
+	while ((i != task_map.end()) && i->second.finished)
+	{
+		task_map.erase(i++);
+	}
 }

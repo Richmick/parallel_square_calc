@@ -8,11 +8,11 @@ import <atomic>;
 
 namespace concurrent::multithread
 {
-	export template< class Typemap, bool LightVersion >
+	export template< class Typemap >
 	class worker
 	{
 	public:
-		using pool_type = pool< Typemap, LightVersion >;
+		using pool_type = pool< Typemap >;
 		using self_iterator = typename std::map< std::size_t, typename Typemap::thread >::iterator;
 		using task_iterator = typename std::map< typename pool_type::idx_t, task >::iterator;
 

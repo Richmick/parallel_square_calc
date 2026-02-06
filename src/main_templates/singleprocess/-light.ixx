@@ -8,7 +8,6 @@ import <vector>;
 import <string>;
 
 import geometry;
-import concurrent.thread_pool;
 
 import :common;
 
@@ -70,24 +69,25 @@ namespace mains::singleprocess
 		geometry::composition_t composed;
 		composed.shapes.emplace_back(geometry::shape_t{circle});
 
-		std::vector< std::future< std::uint64_t > > results;
+		std::vector< std::pair< typename Typemap::thread, std::future< std::uint64_t > > > results;
 		results.reserve(nthreads);
 		std::uint64_t hits = 0;
 
-		concurrent::multithread::pool< Typemap > pool;
-		pool.resize(nthreads - 1);
 		std::uint64_t shots_per_thread = shots / nthreads;
 		for (; nthreads > 1; nthreads--)
 		{
-			results.push_back(pool.create_task(monothread,
-							engine(), shots_per_thread, frame, std::ref(composed)).second);
+			std::packaged_task< std::uint64_t(std::uint64_t, std::uint64_t,
+							geometry::rect_t, geometry::composition_t&) > task(monothread);
+			std::future< std::uint64_t > future = task.get_future();
+			results.emplace_back(Typemap::thread(std::move(task),
+							engine(), shots_per_thread, frame, std::ref(composed)), std::move(future));
 		}
-		pool.unlock();
 
 		shots_per_thread += shots % (results.size() + 1);
 		hits = monothread(engine(), shots_per_thread, frame, composed);
-		for (std::future< std::uint64_t >& future: results)
+		for (auto& [thread, future]: results)
 		{
+			thread.join();
 			hits += future.get();
 		}
 		std::println("{}", shots_to_square(frame, shots, hits));
