@@ -24,6 +24,7 @@ namespace concurrent::multiprocess
 		};
 
 		process() = default;
+		~process();
 
 		void start(std::string path, std::span< const std::string > arguments);
 		void set_io(IO stream, os::pipe pipe);
@@ -38,7 +39,7 @@ namespace concurrent::multiprocess
 		bool alive() const;
 
 	private:
-		os::unique_native_handle handle_;
+		os::unique_handle handle_;
 		os::pipe stdin_, stdout_, stderr_;
 	};
 }

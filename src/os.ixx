@@ -6,7 +6,10 @@ export import os.winapi;
 #ifdef _WIN32
 namespace os
 {
-	export using pipe = winapi::pipe;
-	export using unique_native_handle = winapi::unique_handle;
+	export using winapi::open_tag_t;
+	export using winapi::open_tag;
+	export using winapi::pipe_create_info;
+	export using winapi::pipe;
+	export using winapi::unique_handle;
 }
 #endif
