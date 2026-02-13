@@ -13,6 +13,8 @@ BOOST_AUTO_TEST_CASE(plain_args_test)
 	BOOST_TEST(!flags.test('\0'));
 	BOOST_TEST(!flags.test(' '));
 	BOOST_TEST(!flags.test("flag"));
+	BOOST_TEST(!flags.has_key("flag"));
+	BOOST_TEST(!flags.has_key("key"));
 	BOOST_CHECK_THROW(flags["key"], std::out_of_range);
 	BOOST_CHECK_EQUAL_COLLECTIONS(flags.plain().begin(), flags.plain().end(), args, std::end(args));
 
@@ -22,6 +24,8 @@ BOOST_AUTO_TEST_CASE(plain_args_test)
 	BOOST_TEST(!flags.test('\0'));
 	BOOST_TEST(!flags.test(' '));
 	BOOST_TEST(!flags.test("flag"));
+	BOOST_TEST(!flags.has_key("flag"));
+	BOOST_TEST(!flags.has_key("key"));
 	BOOST_CHECK_THROW(flags["key"], std::out_of_range);
 	BOOST_CHECK_EQUAL_COLLECTIONS(flags.plain().begin(), flags.plain().end(), args, std::end(args));
 }
@@ -41,6 +45,9 @@ BOOST_AUTO_TEST_CASE(unrestricted_test)
 	BOOST_TEST(!flags.test("noflag"));
 	BOOST_TEST(flags["key1"] == "");
 	BOOST_TEST(flags["key2"] == "value2");
+	BOOST_TEST(!flags.has_key("flag"));
+	BOOST_TEST(flags.has_key("key1"));
+	BOOST_TEST(flags.has_key("key2"));
 	BOOST_CHECK_THROW(flags["flag"], std::out_of_range);
 	BOOST_CHECK_THROW(flags["third"], std::out_of_range);
 	BOOST_CHECK_THROW(flags["nokey"], std::out_of_range);
@@ -78,6 +85,9 @@ BOOST_AUTO_TEST_CASE(restricted_test)
 	BOOST_TEST(!flags.test("third"));
 	BOOST_TEST(flags.test("flag"));
 	BOOST_TEST(!flags.test("noflag"));
+	BOOST_TEST(flags.has_key("key1"));
+	BOOST_TEST(flags.has_key("key2"));
+	BOOST_TEST(flags.has_key("-key3"));
 	BOOST_TEST(flags["key1"] == "");
 	BOOST_TEST(flags["key2"] == "value2");
 	BOOST_TEST(flags["-key3"] == "value3");

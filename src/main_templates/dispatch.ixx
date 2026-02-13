@@ -10,6 +10,7 @@ import <stdexcept>;
 import flags;
 import main_templates.singleprocess;
 import main_templates.multiprocess;
+import concurrent.type_suppliers;
 
 namespace mains
 {
@@ -40,8 +41,7 @@ namespace mains
 		}
 
 		std::span plain = flags.plain();
-		std::vector< const char* > args;
-		args.resize(plain.size());
+		std::vector< const char* > args(plain.size());
 		for (std::size_t i = 0; i < plain.size(); i++)
 		{
 			args[i] = plain[i].data();
@@ -49,11 +49,11 @@ namespace mains
 
 		if (flags.test('s'))
 		{
-			return singleprocess(static_cast< int >(args.size()), args.data());
+			return mains::singleprocess::heavy< concurrent::std_types >(static_cast< int >(args.size()), args.data());
 		}
 		if (flags.test('m'))
 		{
-			return multiprocess(static_cast< int >(args.size()), args.data());
+			return mains::multiprocess(static_cast< int >(args.size()), args.data());
 		}
 		return 3;
 	}

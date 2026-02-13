@@ -1,9 +1,7 @@
 export module main_templates.singleprocess;
 
-namespace mains
-{
-	export int singleprocess(int, const char*const*)
-	{
-		return 4;
-	}
-}
+export import concurrent.thread_pool;
+
+export import :common;
+export import :light;
+export import :heavy;
