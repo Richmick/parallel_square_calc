@@ -1,6 +1,6 @@
 export module timer;
 
-import <chrono>;
+export import <chrono>;
 
 namespace chrono
 {

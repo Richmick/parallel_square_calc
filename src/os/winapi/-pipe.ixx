@@ -2,7 +2,11 @@ export module os.winapi:pipe;
 
 import <string>;
 import <stdexcept>;
+import <thread>;
 import <chrono>;
+export import <span>;
+
+import timer;
 
 import :common;
 import :unique_handle;
@@ -44,7 +48,7 @@ namespace winapi
 		/// Open existing named pipe (as client)
 		pipe(open_tag_t, std::string name, pipe_open_mode mode, bool async = false)
 		{
-			std::string real_name = "\\\\.\\pipe\\" + name;
+			std::string real_name = "\\\\.\\pipe\\LOCAL\\" + name;
 			dword_t access = 0;
 			switch (mode)
 			{
@@ -79,7 +83,7 @@ namespace winapi
 		/// Create server-side named pipe
 		pipe(std::string name, pipe_open_mode mode, pipe_create_info info, bool inherit = true)
 		{
-			std::string real_name = "\\\\.\\pipe\\" + name;
+			std::string real_name = "\\\\.\\pipe\\LOCAL\\" + name;
 			dword_t open_mode = static_cast< dword_t >(mode) | pipe_open_parameters::first_instance;
 			if (info.async) open_mode |= pipe_open_parameters::overlapped;
 			dword_t work_mode = pipe_modes::reject_remotes | pipe_modes::nowait
@@ -180,6 +184,23 @@ namespace winapi
 			}
 			return written;
 		}
+		bool write(std::span< const char > msg,
+					std::chrono::milliseconds timeout = std::chrono::milliseconds{(~1ULL) >> 1},
+					std::size_t* written = nullptr)
+		{
+			std::size_t i = 0;
+			chrono::timer timer;
+			for (; (i < msg.size()) && (timer.time_since_epoch() <= timeout);
+						i += write_nonblock(msg.data() + i, msg.size() - i))
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds{5});
+			}
+			if (written != nullptr)
+			{
+				*written = i;
+			}
+			return i == msg.size();
+		}
 		std::size_t read_nonblock(char* buf, std::size_t len)
 		{
 			dword_t was_read = 0;
@@ -190,10 +211,19 @@ namespace winapi
 			return was_read;
 		}
 
-	private:
-		unique_handle read_, write_, biside_;
-		handle_t read_nonown_ = nullptr;
-		handle_t write_nonown_ = nullptr;
+		static handle_t get_stdio(IO stream)
+		{
+			return GetStdHandle(static_cast< dword_t >(stream));
+		}
+		static pipe get_stdio_pipe(IO stream)
+		{
+			if (stream == IO::in)
+			{
+				return pipe{get_stdio(stream), nullptr};
+			}
+			return pipe{nullptr, get_stdio(stream)};
+			
+		}
 
 		handle_t native_read() noexcept
 		{
@@ -209,5 +239,10 @@ namespace winapi
 			if (write_nonown_) return write_nonown_;
 			return nullptr;
 		}
+
+	private:
+		unique_handle read_, write_, biside_;
+		handle_t read_nonown_ = nullptr;
+		handle_t write_nonown_ = nullptr;
 	};
 }
