@@ -25,6 +25,7 @@ namespace winapi
 	export using ::CreateFileA;
 	export using ::WriteFile;
 	export using ::ReadFile;
+	export using ::FlushFileBuffers;
 	export using ::CreatePipe;
 	export using ::CreateNamedPipeA;
 	export using ::PeekNamedPipe;

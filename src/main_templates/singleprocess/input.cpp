@@ -48,6 +48,7 @@ void mains::singleprocess::init_data::init(int argc, const char* const* argv)
 	if (fatal) log.level(logging::level::fatal);
 	if (info) log.level(logging::level::info);
 	if (debug) log.level(logging::level::debug);
+	log.set_name("executor");
 	log.debug("logger init finished");
 
 	always_online = flags.test('a');

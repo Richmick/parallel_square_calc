@@ -201,14 +201,29 @@ namespace winapi
 			}
 			return i == msg.size();
 		}
-		std::size_t read_nonblock(char* buf, std::size_t len)
+		std::size_t available()
 		{
-			dword_t was_read = 0;
-			if (!PeekNamedPipe(native_read(), buf, static_cast< dword_t >(len), &was_read, nullptr, nullptr))
+			dword_t result = 0;
+			if (!PeekNamedPipe(native_read(), nullptr, 0, nullptr, &result, nullptr))
 			{
 				throw last_exception("failed to read from file");
 			}
-			return was_read;
+			return result;
+		}
+		std::size_t read_nonblock(char* buf, std::size_t len)
+		{
+			std::size_t avail = available();
+			if (avail < len)
+			{
+				len = avail;
+			}
+			if (len > 0)
+			{
+				dword_t result = 0;
+				ReadFile(native_read(), buf, static_cast< dword_t >(len), &result, nullptr);
+				return result;
+			}
+			return 0;
 		}
 
 		static handle_t get_stdio(IO stream)
@@ -222,7 +237,6 @@ namespace winapi
 				return pipe{get_stdio(stream), nullptr};
 			}
 			return pipe{nullptr, get_stdio(stream)};
-			
 		}
 
 		handle_t native_read() noexcept

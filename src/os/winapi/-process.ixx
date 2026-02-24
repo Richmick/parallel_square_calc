@@ -20,7 +20,9 @@ namespace winapi
 	{
 	public:
 		process() = default;
+		process(process&&) = default;
 		~process();
+		process& operator=(process&&) = default;
 
 		/// Do not add path as first argv
 		void start(std::string path, std::string arguments);
@@ -37,6 +39,7 @@ namespace winapi
 
 		int return_code() const noexcept; ///< result after join
 		int id() const noexcept;
+		handle_t native_handle() noexcept;
 
 	private:
 		unique_handle handle_;
@@ -170,7 +173,7 @@ bool winapi::process::join(std::chrono::milliseconds timeout)
 }
 bool winapi::process::alive()
 {
-	return !join(std::chrono::milliseconds{0});
+	return joinable() && !join(std::chrono::milliseconds{0});
 }
 int winapi::process::return_code() const noexcept
 {
@@ -179,4 +182,8 @@ int winapi::process::return_code() const noexcept
 int winapi::process::id() const noexcept
 {
 	return id_;
+}
+winapi::handle_t winapi::process::native_handle() noexcept
+{
+	return handle_.get();
 }

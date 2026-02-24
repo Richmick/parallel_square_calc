@@ -115,7 +115,6 @@ BOOST_AUTO_TEST_CASE(full_test)
 		BOOST_TEST(pgm.join(100ms));
 		return;
 	}
-	pgm.get_io(os::IO::in).write_nonblock("\0\0\0\0", 4);
 	pgm.get_io(os::IO::in).release_write();
 	BOOST_TEST(pgm.join(500ms));
 

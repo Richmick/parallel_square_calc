@@ -24,9 +24,11 @@ void test_pipe(os::pipe& rpipe, os::pipe& wpipe)
 	for (; (i < len) || (timer.time_since_epoch() > 100ms); i += wpipe.write_nonblock(msg + i, len - i))
 	{}
 	BOOST_TEST(i == len);
+	BOOST_TEST(rpipe.available() == len);
 	char buf[len];
 	for (i = 0; (i < len) || (timer.time_since_epoch() > 100ms); i += rpipe.read_nonblock(buf + i, len - i))
 	{}
+	BOOST_TEST(rpipe.available() == 0);
 	BOOST_TEST(i == len);
 	BOOST_CHECK_EQUAL_COLLECTIONS(buf, buf + len, msg, msg + len);
 }

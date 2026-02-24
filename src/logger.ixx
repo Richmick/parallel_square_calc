@@ -38,6 +38,10 @@ namespace logging
 		{
 			lvl_ = lvl;
 		}
+		void set_name(std::string name)
+		{
+			name_ = std::move(name);
+		}
 
 		template< class... Args >
 		void fatal(std::format_string< Args...> format, Args&&... args)
@@ -59,6 +63,7 @@ namespace logging
 		std::ostream& out_;
 		int id_;
 		logging::level lvl_;
+		std::string name_;
 
 		template< class... Args >
 		void println(std::pair< logging::level, const char* > lvl,
@@ -71,12 +76,17 @@ namespace logging
 			std::string msg = std::format(format, std::forward< Args >(args)...);
 			if (id_ != -1)
 			{
-				std::println(out_, "[{}]{{id={}, time={}}} {}", lvl.second, id_,
+				std::println(out_, "[{}]{{{}#{}, time={}}} {}", lvl.second, name_, id_,
+							std::chrono::system_clock::now(), std::move(msg));
+			}
+			else if (!name_.empty())
+			{
+				std::println(out_, "[{}]{{{}, time={}}} {}", lvl.second, name_,
 							std::chrono::system_clock::now(), std::move(msg));
 			}
 			else
 			{
-				std::println(out_, "[{}]{{no-id, time={}}} {}", lvl.second,
+				std::println(out_, "[{}]{{unknown, time={}}} {}", lvl.second,
 							std::chrono::system_clock::now(), std::move(msg));
 			}
 		}

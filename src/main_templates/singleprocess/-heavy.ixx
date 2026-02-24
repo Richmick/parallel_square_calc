@@ -36,12 +36,12 @@ namespace mains::singleprocess
 
 		void success(std::uint64_t hits)
 		{
-			std::println(out, "! {} {} !", id, shots_to_square(frame, shots, hits));
+			std::println(out, "< {} {} >", id, shots_to_square(frame, shots, hits));
 			finished = true;
 		}
 		void fatal()
 		{
-			std::println(out, "! {} fatal !", id);
+			std::println(out, "< {} fatal >", id);
 			finished = true;
 		}
 	};
