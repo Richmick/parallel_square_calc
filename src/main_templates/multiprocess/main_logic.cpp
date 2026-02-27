@@ -37,12 +37,19 @@ int mains::multiprocess::multiprocess(int argc, const char*const* argv)
 	std::map< std::string_view, void(cmd_controller::*)() > commands = {
 				{"spawn", &cmd_controller::spawn},
 				{"send", &cmd_controller::add_task},
+				{"state", &cmd_controller::task_state},
+				{"wait", &cmd_controller::wait_task},
 				{"print-alive", &cmd_controller::print_alive},
 				{"help", &cmd_controller::print_help},
 				{"cmds", &cmd_controller::print_command_names},
 				{"int", &cmd_controller::interrupt},
 				{"kill", &cmd_controller::terminate},
-				{"shape-frame", &cmd_controller::calculate_shape_frame},
+				{"create", &cmd_controller::add_shape},
+				{"combine", &cmd_controller::add_composition},
+				{"shape", &cmd_controller::print_shape},
+				{"all-shapes", &cmd_controller::print_all_shapes},
+				{"frame", &cmd_controller::calculate_shape_frame},
+				{"composition", &cmd_controller::print_composition},
 				{"composition-frame", &cmd_controller::calculate_composition_frame},
 				{"composition-names", &cmd_controller::print_compositions_names},
 			};
@@ -159,8 +166,13 @@ void mains::multiprocess::print_help()
 				"COMMANDS:\n"
 				"\tspawn <proc-name>\n"
 				"\t\tSpawn child process with recognition name <proc-name> and generated seed\n"
-				"\tsend <proc-name> <task-name> <composition-name> <nthreads> <shots>\n"
-				"\t\tSend calculation task to child process\n"
+				"\tsend <proc-name> [#]<task-name> <composition-name> <nthreads> <shots>\n"
+				"\t\tSend calculation task to child process. If <task-name> starts with '#' then\n"
+				"\t\tthis prefix will be removed and postfix \"#<generated-id>\" will be added\n"
+				"\tstate <task-name>\n"
+				"\t\tRequest for current task state\n"
+				"\twait <task-name> <duration-value>(ms|s|m|h)\n"
+				"\t\tWait for task completion with duration restriction\n"
 				"\tprint-alive\n"
 				"\t\tPrint all alive processes with format \"id) name\" \n"
 				"\thelp\n"
@@ -171,8 +183,20 @@ void mains::multiprocess::print_help()
 				"\t\tSend sigint to child process (process will exit after finishing started calculations)\n"
 				"\tkill <proc-name>\n"
 				"\t\tTerminate process\n"
-				"\tshape-frame <shape-name>\n"
+				"\tcreate <shape-name> circle <radius> <center.x> <center.y>\n"
+				"\tcreate <shape-name> rect <p1.x> <p1.y> <p2.x> <p2.y>\n"
+				"\tcreate <shape-name> ellipse <h_semiaxis> <v_semiaxis> <center.x> <center.y>\n"
+				"\t\tCreate named shape\n"
+				"\tcombine <composition-name> (<shape-names> <rotation>)... ;\n"
+				"\t\tCreate named composition\n"
+				"\tshape <shape-name>\n"
+				"\t\tPrint shape data\n"
+				"\tall-shapes\n"
+				"\t\tPrint all shapes\n"
+				"\tframe <shape-name>\n"
 				"\t\tCalculate frame rectangle for shape\n"
+				"\tcomposition <composition-name>\n"
+				"\t\tPrint composed shapes data\n"
 				"\tcomposition-frame <composition-name>\n"
 				"\t\tCalculate frame rectangle for composition\n"
 				"\tcomposition-names\n"
@@ -186,13 +210,22 @@ void mains::multiprocess::cmd_controller::print_help()
 void mains::multiprocess::cmd_controller::print_command_names()
 {
 	std::println("* spawn <proc-name>\n"
-				"* send <proc-name> <task-name> <composition-name> <nthreads> <shots>\n"
+				"* send <proc-name> [#]<task-name> <composition-name> <nthreads> <shots>\n"
+				"* state <task-name>\n"
+				"* wait <task-name> <duration-value>(ms|s|m|h)\n"
 				"* print-alive\n"
 				"* help\n"
 				"* cmds\n"
 				"* int <proc-name>\n"
 				"* kill <proc-name>\n"
-				"* shape-frame <shape-name>\n"
+				"* create <shape-name> circle <radius> <center.x> <center.y>\n"
+				"* create <shape-name> rect <p1.x> <p1.y> <p2.x> <p2.y>\n"
+				"* create <shape-name> ellipse <h_semiaxis> <v_semiaxis> <center.x> <center.y>\n"
+				"* combine <composition-name> (<shape-names> <rotation>)... ;\n"
+				"* shape <shape-name>\n"
+				"* all-shapes\n"
+				"* frame <shape-name>\n"
+				"* composition <composition-name>\n"
 				"* composition-frame <composition-name>\n"
 				"* composition-names");
 }

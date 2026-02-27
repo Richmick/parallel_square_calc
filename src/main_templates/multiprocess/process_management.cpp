@@ -33,8 +33,9 @@ void mains::multiprocess::cmd_controller::spawn()
 {
 	std::string name;
 	std::cin >> name;
-	auto ins = pids_.try_emplace(name, ++last_id_);
+	auto ins = pids_.try_emplace(name, next_pid_);
 	if (!ins.second) throw std::invalid_argument("Entered existing name");
+	std::size_t id = next_pid_++;
 	os::process proc;
 	proc.set_io(os::IO::in, os::pipe{100});
 	proc.set_io(os::IO::out, os::pipe{100});
@@ -44,16 +45,18 @@ void mains::multiprocess::cmd_controller::spawn()
 	std::string args = "\"" + std::string(settings_.executor)
 			+ "\"" + (settings_.recursive_executor ? " slave" : "")
 			+ " -S --seed=" + std::to_string(settings_.engine())
-			+ " --id=" + std::to_string(last_id_)
+			+ " --id=" + std::to_string(id)
 			+ " " + settings_.executor_args.data();
 	log().debug("prepared to start child process");
 	proc.start(std::string(settings_.executor), args);
+	std::unique_lock lock{daemon_};
 	processes_.try_emplace(ins.first->second, std::move(proc));
-	log().info("started child process #{}", last_id_);
+	log().info("started child process #{}", id);
 }
 void mains::multiprocess::cmd_controller::print_alive()
 {
 	std::size_t i = 0;
+	std::unique_lock lock{daemon_};
 	for (const auto& [name, id]: pids_)
 	{
 		auto proc = processes_.find(id);
@@ -76,6 +79,7 @@ void mains::multiprocess::cmd_controller::interrupt()
 	std::string name;
 	std::cin >> name;
 	os::process& proc = processes_.at(pids_.at(name));
+	std::unique_lock lock{daemon_};
 	if (proc.joinable())
 	{
 		proc.get_io(os::IO::in).release_write();
@@ -88,6 +92,7 @@ void mains::multiprocess::cmd_controller::terminate()
 	std::string name;
 	std::cin >> name;
 	os::process& proc = processes_.at(pids_.at(name));
+	std::unique_lock lock{daemon_};
 	if (proc.joinable())
 	{
 		proc.kill();

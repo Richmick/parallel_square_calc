@@ -18,6 +18,18 @@ void mains::multiprocess::io_daemon::send(std::size_t proc_id, std::string msg)
 	io_buffer& cache = buffers_.try_emplace(proc_id).first->second;
 	cache.pending += std::move(msg);
 }
+std::size_t mains::multiprocess::io_daemon::ready()
+{
+	return results_.size();
+}
+std::pair< std::size_t, mains::multiprocess::task_result > mains::multiprocess::io_daemon::top()
+{
+	return results_.back();
+}
+void mains::multiprocess::io_daemon::pop()
+{
+	results_.pop_back();
+}
 
 void mains::multiprocess::io_daemon::operator()(std::stop_token stop)
 {
@@ -55,13 +67,40 @@ void mains::multiprocess::io_daemon::operator()(std::stop_token stop)
 						{
 							continue;
 						}
-						if (buf[i] == '>')
+						if (buf[i] != '>')
 						{
-							log_.info("process #{} finished task #{} with result {}", id, 0, cache.catched);
-							cache.catched.clear();
+							cache.catched += buf[i];
 							continue;
 						}
-						cache.catched += buf[i];
+						std::pair< std::size_t, task_result > res;
+						std::istringstream msg{cache.catched};
+						msg.ignore(1);
+						msg >> res.first >> res.second.square;
+						if (!msg)
+						{
+							msg.clear(msg.rdstate() & ~std::ios::failbit);
+							std::string fatal;
+							msg >> fatal;
+							if (fatal != "fatal")
+							{
+								log_.fatal("failed to parse message: \"{}>\"", cache.catched);
+								cache.catched.clear();
+								continue;
+							}
+							res.second.fatal = true;
+						}
+						res.second.ready = true;
+						results_.push_back(res);
+						cache.catched.clear();
+						notify_all();
+						if (!res.second.fatal)
+						{
+							log_.info("process #{} finished task #{} with result {}", id, res.first, res.second.square);
+						}
+						else
+						{
+							log_.info("process #{} finished task #{} because of fatal error", id, res.first);
+						}
 					}
 				}
 				catch (const std::system_error&)
