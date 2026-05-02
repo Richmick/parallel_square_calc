@@ -16,6 +16,10 @@ namespace mains
 {
 	export int dispatch(int argc, const char*const* argv)
 	{
+		if ((argc < 2) || (std::string_view(argv[1]) != "dispatch"))
+		{
+			return mains::multiprocess::multiprocess(argc, argv);
+		}
 		dispatch::expectation expect;
 		expect.add_long_flag("singleprocess", 's');
 		expect.add_long_flag("multiprocess", 'm');
@@ -53,7 +57,7 @@ namespace mains
 		}
 		if (flags.test('m'))
 		{
-			return mains::multiprocess(static_cast< int >(args.size()), args.data());
+			return mains::multiprocess::multiprocess(static_cast< int >(args.size()), args.data());
 		}
 		return 3;
 	}

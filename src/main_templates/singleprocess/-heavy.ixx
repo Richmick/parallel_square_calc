@@ -8,6 +8,8 @@ import <future>;
 import <string>;
 import <mutex>;
 import <map>;
+import <thread>;
+import <chrono>;
 
 import logger;
 import geometry;
@@ -34,12 +36,12 @@ namespace mains::singleprocess
 
 		void success(std::uint64_t hits)
 		{
-			std::println(out, "! {} {} !", id, shots_to_square(frame, shots, hits));
+			std::println(out, "< {} {} >", id, shots_to_square(frame, shots, hits));
 			finished = true;
 		}
 		void fatal()
 		{
-			std::println(out, "! {} fatal !", id);
+			std::println(out, "< {} fatal >", id);
 			finished = true;
 		}
 	};
@@ -66,6 +68,7 @@ namespace mains::singleprocess
 	calculation_task& read_task(std::istream& in, std::map< std::size_t, calculation_task >& task_map);
 	void send_task(logging::logger& log, init_data& data, calculation_task& task, auto& pool);
 	void forget_finished(std::map< std::size_t, calculation_task >& task_map);
+	bool register_death_callback(logging::logger* log);
 }
 
 template< class Typemap >
@@ -87,6 +90,7 @@ int mains::singleprocess::heavy(int argc, const char*const* argv)
 	}
 	logging::logger& log = data.log;
 
+	register_death_callback(&log);
 	concurrent::multithread::pool< Typemap > pool;
 	pool.resize(data.start_nthreads);
 	pool.unlock();
@@ -114,6 +118,12 @@ int mains::singleprocess::heavy(int argc, const char*const* argv)
 			log.fatal("failed to create task: {}", e.what());
 			std::cin.clear(std::cin.rdstate() & ~std::ios::failbit);
 		}
+	}
+	log.debug("slave started waiting for tasks completion");
+	while (!task_map.empty())
+	{
+		forget_finished(task_map);
+		std::this_thread::sleep_for(std::chrono::milliseconds{50});
 	}
 	log.info("slave finished");
 	return 0;
