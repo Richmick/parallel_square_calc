@@ -1,7 +1,6 @@
 module main_templates.multiprocess;
 
-import <print>;
-import <chrono>;
+import std;
 
 void mains::multiprocess::cmd_controller::add_task()
 {

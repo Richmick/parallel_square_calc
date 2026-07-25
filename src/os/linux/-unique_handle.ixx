@@ -1,25 +1,24 @@
 module;
-#ifdef _WIN32
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
+#ifdef __linux__
+	#include <fcntl.h>
 #endif
-export module os.winapi:unique_handle;
+export module os.linux:unique_handle;
 
-namespace winapi
+namespace linux
 {
 	export class unique_handle;
 }
 namespace std
 {
-	export void swap(winapi::unique_handle& lhs, winapi::unique_handle& rhs) noexcept;
+	export void swap(linux::unique_handle& lhs, linux::unique_handle& rhs) noexcept;
 }
 
-#ifdef _WIN32
+#ifdef __linux__
 
 import std;
 import :common;
 
-namespace winapi
+namespace linux
 {
 	class unique_handle
 	{
@@ -49,7 +48,7 @@ namespace winapi
 		{
 			if (operator bool())
 			{
-				::CloseHandle(release());
+				fclose(release());
 			}
 		}
 		handle_t get() const noexcept
@@ -64,7 +63,7 @@ namespace winapi
 		{
 			std::swap(native_, rhs.native_);
 		}
-		
+
 		handle_t* operator&()
 		{
 			close();
@@ -79,7 +78,7 @@ namespace winapi
 	};
 }
 
-export void std::swap(winapi::unique_handle& lhs, winapi::unique_handle& rhs) noexcept
+export void std::swap(linux::unique_handle& lhs, linux::unique_handle& rhs) noexcept
 {
 	lhs.swap(rhs);
 }

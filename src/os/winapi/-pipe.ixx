@@ -1,13 +1,7 @@
 export module os.winapi:pipe;
 
-import <string>;
-import <stdexcept>;
-import <thread>;
-import <chrono>;
-export import <span>;
-
+import std;
 import timer;
-
 import :common;
 import :unique_handle;
 

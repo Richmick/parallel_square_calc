@@ -1,15 +1,8 @@
 export module main_templates.multiprocess;
 
-import <iostream>;
-import <random>;
-import <string_view>;
-import <string>;
-import <mutex>;
-import <condition_variable>;
-import <thread>;
-import <map>;
-import logger;
+import std;
 import os;
+import logger;
 import geometry;
 
 namespace mains::multiprocess

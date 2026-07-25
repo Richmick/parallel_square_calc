@@ -1,8 +1,6 @@
 export module logger;
 
-import <ostream>;
-import <string>;
-import <chrono>;
+import std;
 
 namespace logging
 {

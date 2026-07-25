@@ -17,4 +17,9 @@ namespace os
 	export using winapi::still_active_code;
 	export using winapi::disable_inheritance;
 }
+#elifdef __linux__
+namespace os
+{
+	export using linux::unique_handle;
+}
 #endif

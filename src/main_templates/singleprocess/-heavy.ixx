@@ -1,15 +1,6 @@
 export module main_templates.singleprocess:heavy;
 
-import <iostream>;
-import <print>;
-import <random>;
-import <vector>;
-import <future>;
-import <string>;
-import <mutex>;
-import <map>;
-import <thread>;
-import <chrono>;
+import std;
 
 import logger;
 import geometry;

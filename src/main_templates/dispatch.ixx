@@ -1,12 +1,6 @@
 export module main_templates.dispatch;
 
-import <iostream>;
-import <print>;
-import <vector>;
-import <string_view>;
-import <span>;
-import <stdexcept>;
-
+import std;
 import flags;
 import main_templates.singleprocess;
 import main_templates.multiprocess;

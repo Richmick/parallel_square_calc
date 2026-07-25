@@ -1,10 +1,7 @@
 export module concurrent.thread_pool:worker;
 
+import std;
 import :pool;
-
-import <map>;
-import <mutex>;
-import <atomic>;
 
 namespace concurrent::multithread
 {

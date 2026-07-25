@@ -1,8 +1,6 @@
 export module geometry:composition;
 
-import <variant>;
-import <vector>;
-
+import std;
 import :shapes;
 import :basic_operations;
 

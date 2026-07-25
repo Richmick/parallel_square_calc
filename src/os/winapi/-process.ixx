@@ -1,10 +1,6 @@
 export module os.winapi:process;
 
-import <string>;
-import <chrono>;
-import <span>;
-import <exception>;
-
+import std;
 import :common;
 import :pipe;
 import :unique_handle;

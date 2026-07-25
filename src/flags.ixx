@@ -1,11 +1,6 @@
 export module flags;
 
-import <span>;
-import <map>;
-import <set>;
-import <vector>;
-import <string_view>;
-import <string>;
+import std;
 
 namespace dispatch
 {
@@ -72,10 +67,6 @@ namespace dispatch
 }
 
 module: private;
-
-import <cctype>;
-import <stdexcept>;
-import <algorithm>;
 
 void dispatch::expectation::add_key_value(std::string key) &
 {

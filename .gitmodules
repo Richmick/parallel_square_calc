@@ -1,0 +1,3 @@
+[submodule "cmake/import-std"]
+	path = cmake/import-std
+	url = https://github.com/vernizzi/cmake-import-std

@@ -1,8 +1,6 @@
 module main_templates.multiprocess;
 
-import <stdexcept>;
-import <print>;
-import <iostream>;
+import std;
 import flags;
 import main_templates.singleprocess;
 import concurrent.type_suppliers;

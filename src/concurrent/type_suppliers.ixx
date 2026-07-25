@@ -1,8 +1,6 @@
 export module concurrent.type_suppliers;
 
-export import <mutex>;
-export import <thread>;
-export import <condition_variable>;
+import std;
 
 namespace concurrent
 {

@@ -1,14 +1,7 @@
 export module main_templates.singleprocess:light;
 
-import <iostream>;
-import <print>;
-import <random>;
-import <future>;
-import <vector>;
-import <string>;
-
+import std;
 import geometry;
-
 import :common;
 
 namespace mains::singleprocess

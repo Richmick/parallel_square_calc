@@ -7,8 +7,7 @@ export module os.winapi:common;
 
 #ifdef _WIN32
 
-import <system_error>;
-import <string>;
+import std;
 
 namespace winapi
 {

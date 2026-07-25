@@ -1,13 +1,6 @@
 export module concurrent.thread_pool:pool;
 
-import <cstddef>;
-import <map>;
-import <list>;
-import <atomic>;
-import <exception>;
-import <future>;
-import <functional>;
-import <iterator>;
+import std;
 
 namespace concurrent::multithread
 {

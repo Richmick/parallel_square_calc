@@ -1,10 +1,6 @@
 export module geometry:basic_operations;
 
-import <cstdint>;
-import <algorithm>;
-import <numbers>;
-import <cmath>;
-
+import std;
 import :shapes;
 
 namespace geometry

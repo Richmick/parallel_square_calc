@@ -1,7 +1,6 @@
 module main_templates.multiprocess;
 
-import <print>;
-import <utility>;
+import std;
 
 mains::multiprocess::cmd_controller::cmd_controller(init_data data):
 	settings_(std::move(data)),

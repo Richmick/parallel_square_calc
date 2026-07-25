@@ -1,6 +1,6 @@
 module main_templates.multiprocess;
 
-import <print>;
+import std;
 
 void mains::multiprocess::data_visitor::operator()(geometry::circle_t c)
 {

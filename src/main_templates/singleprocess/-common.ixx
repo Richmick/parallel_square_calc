@@ -1,6 +1,6 @@
 export module main_templates.singleprocess:common;
 
-import <random>;
+import std;
 import geometry;
 
 namespace mains::singleprocess
